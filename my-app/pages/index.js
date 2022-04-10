@@ -14,7 +14,7 @@ export default function Home() {
   const [tokenIdsMinted, setTokenIdsMinted] = useState("0");
   const web3ModalRef = useRef();
 
- 
+  
   const presaleMint = async () => {
     try {
       const signer = await getProviderOrSigner(true);
@@ -25,7 +25,8 @@ export default function Home() {
         signer
       );
       const tx = await whitelistContract.presaleMint({
-      
+        // value signifies the cost of one crypto dev which is "0.01" eth.
+        // We are parsing `0.01` string to ether using the utils library from ethers.js
         value: utils.parseEther("0.01"),
       });
       setLoading(true);
@@ -37,7 +38,7 @@ export default function Home() {
     }
   };
 
-  
+
   const publicMint = async () => {
     try {
       const signer = await getProviderOrSigner(true);
@@ -47,7 +48,6 @@ export default function Home() {
         signer
       );
       const tx = await whitelistContract.mint({
-      
         value: utils.parseEther("0.01"),
       });
       setLoading(true);
@@ -59,9 +59,9 @@ export default function Home() {
     }
   };
 
-  
   const connectWallet = async () => {
     try {
+      
       await getProviderOrSigner();
       setWalletConnected(true);
     } catch (err) {
@@ -73,30 +73,27 @@ export default function Home() {
   const startPresale = async () => {
     try {
       const signer = await getProviderOrSigner(true);
-      
+     
       const whitelistContract = new Contract(
         NFT_CONTRACT_ADDRESS,
         abi,
         signer
       );
-      // call the startPresale from the contract
       const tx = await whitelistContract.startPresale();
       setLoading(true);
-      // wait for the transaction to get mined
       await tx.wait();
       setLoading(false);
-      // set the presale started to true
       await checkIfPresaleStarted();
     } catch (err) {
       console.error(err);
     }
   };
 
- 
+  
   const checkIfPresaleStarted = async () => {
     try {
       const provider = await getProviderOrSigner();
-      
+      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider);
       const _presaleStarted = await nftContract.presaleStarted();
       if (!_presaleStarted) {
         await getOwner();
@@ -109,10 +106,9 @@ export default function Home() {
     }
   };
 
- 
+  
   const checkIfPresaleEnded = async () => {
     try {
-     
       const provider = await getProviderOrSigner();
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider);
       const _presaleEnded = await nftContract.presaleEnded();
@@ -134,7 +130,6 @@ export default function Home() {
   const getOwner = async () => {
     try {
       const provider = await getProviderOrSigner();
-      
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider);
       const _owner = await nftContract.owner();
       const signer = await getProviderOrSigner(true);
@@ -147,21 +142,20 @@ export default function Home() {
     }
   };
 
- 
+  
   const getTokenIdsMinted = async () => {
     try {
-     
       const provider = await getProviderOrSigner();
-      
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider);
       const _tokenIds = await nftContract.tokenIds();
+      //_tokenIds is a `Big Number`. We need to convert the Big Number to a string
       setTokenIdsMinted(_tokenIds.toString());
     } catch (err) {
       console.error(err);
     }
   };
 
-  
+ 
   const getProviderOrSigner = async (needSigner = false) => {
     const provider = await web3ModalRef.current.connect();
     const web3Provider = new providers.Web3Provider(provider);
@@ -179,10 +173,9 @@ export default function Home() {
     return web3Provider;
   };
 
-  
+ 
   useEffect(() => {
     if (!walletConnected) {
-      
       web3ModalRef.current = new Web3Modal({
         network: "rinkeby",
         providerOptions: {},
@@ -243,6 +236,7 @@ export default function Home() {
       );
     }
 
+    
     if (presaleStarted && !presaleEnded) {
       return (
         <div>
@@ -257,7 +251,7 @@ export default function Home() {
       );
     }
 
-    
+   
     if (presaleStarted && presaleEnded) {
       return (
         <button className={styles.button} onClick={publicMint}>
